@@ -21,7 +21,6 @@ public class GUIManager : MonoBehaviour
         float normalizedHealth = Player.GetNormalizedHealth();
         HealthBar.rectTransform.localScale = new Vector3(normalizedHealth, 1f);
         HealthBar.color = Color.Lerp(Color.red, Color.green, normalizedHealth);
-        Debug.Log(normalizedHealth);
     }
 
     public void AddScore(float amount)

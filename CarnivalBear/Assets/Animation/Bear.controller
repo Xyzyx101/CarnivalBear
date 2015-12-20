@@ -347,9 +347,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.049064983
   m_TransitionOffset: 0
-  m_ExitTime: 0.8830156
+  m_ExitTime: 0.00215024
   m_HasExitTime: 0
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -395,9 +395,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.24999988
+  m_TransitionDuration: 0.24999985
   m_TransitionOffset: 0
-  m_ExitTime: 0.94688904
+  m_ExitTime: 0.07132382
   m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -443,9 +443,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.38760272
+  m_TransitionDuration: 0.2644828
   m_TransitionOffset: 0
-  m_ExitTime: 0.009744093
+  m_ExitTime: 0.009744094
   m_HasExitTime: 0
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -701,9 +701,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0
+  m_TransitionDuration: 0.17470393
   m_TransitionOffset: 0
-  m_ExitTime: 0.0049333367
+  m_ExitTime: 0.004933337
   m_HasExitTime: 0
   m_HasFixedDuration: 1
   m_InterruptionSource: 1
@@ -950,7 +950,7 @@ AnimatorState:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: New State
+  m_Name: AtkIdle
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -973,7 +973,7 @@ AnimatorState:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: duck_slash
+  m_Name: AtkDuck
   m_Speed: 1.5
   m_CycleOffset: 0
   m_Transitions:
@@ -1095,7 +1095,7 @@ AnimatorState:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: mutant_jump_attack
+  m_Name: AtkAir
   m_Speed: 1.5
   m_CycleOffset: 0
   m_Transitions:

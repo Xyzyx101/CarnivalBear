@@ -43,10 +43,17 @@ public class PlayerCharacter : MonoBehaviour
     float HP;
     [SerializeField]
     float MaxHP;
+    [SerializeField]
+    float Damage;
+    [SerializeField]
+    float JumpDamage;
+    [SerializeField]
+    float ComboDamageMultiplier;
 
     Rigidbody RB;
     Animator MyAnimator;
     CapsuleCollider Capsule;
+    PlayerAnimHashIDs AnimHash;
 
     bool Grounded;
     float OriginalGroundCheckDistance;
@@ -61,31 +68,53 @@ public class PlayerCharacter : MonoBehaviour
 
     [SerializeField]
     float ComboTime;
-    public bool CanAttack;
     bool ComboActive;
     AttackState CurrentAttackState;
     float ComboTimer;
     int ComboCount;
 
+    //public Transform KneeRightIKHint;
+    //public Transform KneeLeftIKHint;
+    [SerializeField]
+    GameObject RightChainsawTrigger;
+    [SerializeField]
+    GameObject LeftChainsawTrigger;
+
     void Start()
     {
         MyAnimator = GetComponent<Animator>();
+        AnimHash = GetComponent<PlayerAnimHashIDs>();
+        MyAnimator.stabilizeFeet = true;
+        MyAnimator.applyRootMotion = false;
+
         RB = GetComponent<Rigidbody>();
         Capsule = GetComponent<CapsuleCollider>();
         CapsuleHeight = Capsule.height;
         CapsuleCenter = Capsule.center;
         OriginalGroundCheckDistance = GroundCheckDistance;
         RB.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
-        MyAnimator.applyRootMotion = false;
-        CanAttack = true;
-        HP = 100f;
+
+        HP = 1000f;
+
+        RightChainsawTrigger.SetActive(false);
+        LeftChainsawTrigger.SetActive(false);
     }
+
+    // TODO fix IK
+    //void Update()
+    //{
+    //    MyAnimator.SetIKHintPosition(AvatarIKHint.RightKnee, KneeRightIKHint.position);
+    //    MyAnimator.SetIKHintPosition(AvatarIKHint.LeftKnee, KneeLeftIKHint.position);
+    //    MyAnimator.SetIKHintPositionWeight(AvatarIKHint.RightKnee, 1f);
+    //    MyAnimator.SetIKHintPositionWeight(AvatarIKHint.LeftKnee, 1f);
+    //}
 
     public void Move(Vector3 move, bool crouch, bool jump, bool attack)
     {
         Attack(attack);
         CheckGrounded();
-        if (CurrentAttackState == AttackState.Atk3 || CurrentAttackState == AttackState.Atk6)
+        int animState = MyAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+        if (animState == AnimHash.Atk3State || animState == AnimHash.Atk6State)
         {
             move = Vector3.zero;
         }
@@ -151,115 +180,217 @@ public class PlayerCharacter : MonoBehaviour
 
     void Attack(bool attack)
     {
-        if (!CanAttack)
+        // Find current state
+        AnimatorStateInfo baseState = MyAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo atkState = MyAnimator.GetCurrentAnimatorStateInfo(1);
+        int animState = 0;
+        float animNormalizedTime = 0f;
+        float transitionTime = 0f;
+        if (atkState.fullPathHash == AnimHash.AtkIdleState)
         {
-            return;
+            animState = baseState.fullPathHash;
+            animNormalizedTime = baseState.normalizedTime - Mathf.Floor(baseState.normalizedTime);
+            transitionTime = MyAnimator.GetAnimatorTransitionInfo(0).normalizedTime;
         }
-        else if (!attack && !ComboActive)
+        else
         {
+            animState = atkState.fullPathHash;
+            animNormalizedTime = atkState.normalizedTime - Mathf.Floor(atkState.normalizedTime);
+            transitionTime = MyAnimator.GetAnimatorTransitionInfo(1).normalizedTime;
+        }
+
+        // Turn off colliders if not attacking and start timer if starting an attack
+        if (!attack && !ComboActive)
+        {
+            RightChainsawTrigger.SetActive(false);
+            LeftChainsawTrigger.SetActive(false);
             return;
         }
         else if (attack && !ComboActive)
         {
             ComboTimer = ComboTime;
+            ComboCount = 0;
         }
-        if (Crouching)
-        {
-            MyAnimator.SetTrigger("AtkCrouchTrigger");
-            return;
-        }
-        if (!Grounded)
-        {
-            MyAnimator.SetTrigger("AtkJumpTrigger");
-            return;
-        }
+
+
         ComboActive = true;
         ComboTimer -= Time.fixedDeltaTime;
         if (ComboTimer < 0f)
         {
-            CurrentAttackState = AttackState.Idle;
             ComboTimer = ComboTime;
             ComboCount = 0;
             ComboActive = false;
         }
-        if (!attack)
+
+        if (!attack) // If attack not pressed continue with combo timer
         {
             return;
         }
-        ComboCount++;
-        Debug.Log("ComboCount:" + ComboCount + " State:" + CurrentAttackState);
-        float q = Random.value;
-        switch (CurrentAttackState)
+        else if (AnimHash.IsAnyAtkState(animState) && animNormalizedTime < 0.65f) // Button slaming breaks the combo
         {
-            case AttackState.Idle:
-                if (q < 0.25f)
-                {
-                    MyAnimator.SetTrigger("Atk1Trigger");
-                    CurrentAttackState = AttackState.Atk1;
-                }
-                else if (q < 0.5f)
-                {
-                    MyAnimator.SetTrigger("Atk2Trigger");
-                    CurrentAttackState = AttackState.Atk2;
-                }
-                else if (q < 0.75f)
-                {
-                    MyAnimator.SetTrigger("Atk4Trigger");
-                    CurrentAttackState = AttackState.Atk4;
-                }
-                else
-                {
-                    MyAnimator.SetTrigger("Atk5Trigger");
-                    CurrentAttackState = AttackState.Atk5;
-                }
-                break;
-            case AttackState.Atk1:
-            case AttackState.Atk4:
-                if (ComboCount == 3)
-                {
-                    MyAnimator.SetTrigger("Atk6Trigger");
-                    CurrentAttackState = AttackState.Atk6;
-                }
-                else
-                {
-                    if (q < 0.5f)
-                    {
-                        MyAnimator.SetTrigger("Atk2Trigger");
-                        CurrentAttackState = AttackState.Atk2;
-                    }
-                    else
-                    {
-                        MyAnimator.SetTrigger("Atk5Trigger");
-                        CurrentAttackState = AttackState.Atk5;
-                    }
-                }
-                break;
-            case AttackState.Atk2:
-            case AttackState.Atk5:
-                if (ComboCount == 3)
-                {
-                    MyAnimator.SetTrigger("Atk3Trigger");
-                    CurrentAttackState = AttackState.Atk6;
-                }
-                else
-                {
-                    if (q < 0.5f)
-                    {
-                        MyAnimator.SetTrigger("Atk1Trigger");
-                        CurrentAttackState = AttackState.Atk1;
-                    }
-                    else
-                    {
-                        MyAnimator.SetTrigger("Atk4Trigger");
-                        CurrentAttackState = AttackState.Atk4;
-                    }
-                }
-                break;
-            case AttackState.Atk3:
-            case AttackState.Atk6:
-                ComboCount = 0;
-                break;
+            ComboActive = false;
+            ComboCount = 0;
+            return;
         }
+        else // Good combo timing
+        {
+            ComboTimer = ComboTime;
+            ComboCount++;
+        }
+
+        // Do attack
+        float q = Random.value;
+        if (animState == AnimHash.CrouchState)
+        {
+            RightChainsawTrigger.SetActive(true);
+            MyAnimator.SetTrigger(AnimHash.AtkCrouchTrigger);
+        }
+        else if (!Grounded /*animState == AnimHash.AirborneState*/) // No idea why checking Airborne state fails.  Hashes are fine but it just doesn't work.
+        {
+            RightChainsawTrigger.SetActive(true);
+            LeftChainsawTrigger.SetActive(true);
+            MyAnimator.SetTrigger(AnimHash.AtkJumpTrigger);
+        }
+        else if (animState == AnimHash.Atk1State || animState == AnimHash.Atk4State)
+        {
+            RightChainsawTrigger.SetActive(false);
+            LeftChainsawTrigger.SetActive(true);
+            if (ComboCount == 3)
+            {
+                MyAnimator.SetTrigger(AnimHash.Atk3Trigger);
+            }
+            else
+            {
+                if (q < 0.5f)
+                {
+                    MyAnimator.SetTrigger(AnimHash.Atk2Trigger);
+                }
+                else
+                {
+                    MyAnimator.SetTrigger(AnimHash.Atk5Trigger);
+                }
+            }
+        }
+        else if (animState == AnimHash.Atk2State || animState == AnimHash.Atk5State)
+        {
+            RightChainsawTrigger.SetActive(true);
+            LeftChainsawTrigger.SetActive(false);
+            if (ComboCount == 3)
+            {
+                MyAnimator.SetTrigger(AnimHash.Atk6Trigger);
+            }
+            else
+            {
+                if (q < 0.5f)
+                {
+                    MyAnimator.SetTrigger(AnimHash.Atk1Trigger);
+                }
+                else
+                {
+                    MyAnimator.SetTrigger(AnimHash.Atk4Trigger);
+                }
+            }
+        }
+        else if (animState == AnimHash.Atk3State || animState == AnimHash.Atk6State)
+        {
+            ComboCount = 0;
+            ComboActive = false;
+        }
+        else
+        {
+            if (q < 0.25f)
+            {
+                MyAnimator.SetTrigger(AnimHash.Atk1Trigger);
+                RightChainsawTrigger.SetActive(true);
+            }
+            else if (q < 0.5f)
+            {
+                MyAnimator.SetTrigger(AnimHash.Atk2Trigger);
+                LeftChainsawTrigger.SetActive(true);
+            }
+            else if (q < 0.75f)
+            {
+                MyAnimator.SetTrigger(AnimHash.Atk4Trigger);
+                RightChainsawTrigger.SetActive(true);
+            }
+            else
+            {
+                MyAnimator.SetTrigger(AnimHash.Atk5Trigger);
+                LeftChainsawTrigger.SetActive(true);
+            }
+        }
+
+        //switch (CurrentAttackState)
+        //{
+        //    case AttackState.Idle:
+        //        if (q < 0.25f)
+        //        {
+        //            MyAnimator.SetTrigger(AnimHash.Atk1Trigger);
+        //            CurrentAttackState = AttackState.Atk1;
+        //        }
+        //        else if (q < 0.5f)
+        //        {
+        //            MyAnimator.SetTrigger(AnimHash.Atk2Trigger);
+        //            CurrentAttackState = AttackState.Atk2;
+        //        }
+        //        else if (q < 0.75f)
+        //        {
+        //            MyAnimator.SetTrigger(AnimHash.Atk4Trigger);
+        //            CurrentAttackState = AttackState.Atk4;
+        //        }
+        //        else
+        //        {
+        //            MyAnimator.SetTrigger(AnimHash.Atk5Trigger);
+        //            CurrentAttackState = AttackState.Atk5;
+        //        }
+        //        break;
+        //    case AttackState.Atk1:
+        //    case AttackState.Atk4:
+        //        if (ComboCount == 3)
+        //        {
+        //            MyAnimator.SetTrigger(AnimHash.Atk3Trigger);
+        //            CurrentAttackState = AttackState.Atk3;
+        //        }
+        //        else
+        //        {
+        //            if (q < 0.5f)
+        //            {
+        //                MyAnimator.SetTrigger(AnimHash.Atk2Trigger);
+        //                CurrentAttackState = AttackState.Atk2;
+        //            }
+        //            else
+        //            {
+        //                MyAnimator.SetTrigger(AnimHash.Atk5Trigger);
+        //                CurrentAttackState = AttackState.Atk5;
+        //            }
+        //        }
+        //        break;
+        //    case AttackState.Atk2:
+        //    case AttackState.Atk5:
+        //        if (ComboCount == 3)
+        //        {
+        //            MyAnimator.SetTrigger(AnimHash.Atk6Trigger);
+        //            CurrentAttackState = AttackState.Atk6;
+        //        }
+        //        else
+        //        {
+        //            if (q < 0.5f)
+        //            {
+        //                MyAnimator.SetTrigger(AnimHash.Atk1Trigger);
+        //                CurrentAttackState = AttackState.Atk1;
+        //            }
+        //            else
+        //            {
+        //                MyAnimator.SetTrigger(AnimHash.Atk4Trigger);
+        //                CurrentAttackState = AttackState.Atk4;
+        //            }
+        //        }
+        //        break;
+        //    case AttackState.Atk3:
+        //    case AttackState.Atk6:
+        //        ComboCount = 0;
+        //        break;
+        //}
 
     }
 
@@ -286,23 +417,23 @@ public class PlayerCharacter : MonoBehaviour
 
     void UpdateAnimator(Vector3 move)
     {
-        MyAnimator.SetFloat("Forward", ForwardAmount, 0.5f, Time.fixedDeltaTime);
-        MyAnimator.SetFloat("Turn", TurnAmount, 0.1f, Time.fixedDeltaTime);
-        MyAnimator.SetBool("Crouch", Crouching);
-        MyAnimator.SetBool("OnGround", Grounded);
+        MyAnimator.SetFloat(AnimHash.ForwardFloat, ForwardAmount, 0.5f, Time.fixedDeltaTime);
+        MyAnimator.SetFloat(AnimHash.TurnFloat, TurnAmount, 0.1f, Time.fixedDeltaTime);
+        MyAnimator.SetBool(AnimHash.CrouchBool, Crouching);
+        MyAnimator.SetBool(AnimHash.OnGroundBool, Grounded);
         if (move.sqrMagnitude > 0.1f)
         {
             // When moving
-            MyAnimator.SetFloat("RunSpeed", RunSpeed * 0.25f, 0.2f, Time.fixedDeltaTime);
+            MyAnimator.SetFloat(AnimHash.RunSpeedFloat, RunSpeed * 0.25f, 0.2f, Time.fixedDeltaTime);
         }
         else
         {
             // When Idle
-            MyAnimator.SetFloat("RunSpeed", 1f, 0.2f, Time.fixedDeltaTime);
+            MyAnimator.SetFloat(AnimHash.RunSpeedFloat, 1f, 0.2f, Time.fixedDeltaTime);
         }
         if (!Grounded)
         {
-            MyAnimator.SetFloat("Jump", RB.velocity.y);
+            MyAnimator.SetFloat(AnimHash.JumpFloat, RB.velocity.y);
         }
 
         if (Grounded && move.magnitude > 0f)
@@ -377,5 +508,17 @@ public class PlayerCharacter : MonoBehaviour
     public float GetNormalizedHealth()
     {
         return Mathf.Clamp01(HP / MaxHP);
+    }
+
+    public float GetDamage()
+    {
+        if (MyAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash == AnimHash.AtkAirState)
+        {
+            return JumpDamage;
+        }
+        else
+        {
+            return Damage * ComboCount * ComboDamageMultiplier;
+        }
     }
 }
