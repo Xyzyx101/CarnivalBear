@@ -44,7 +44,7 @@ public class PlayerControl : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
         bool crouch = Input.GetButton("Crouch");
-        bool attack = Input.GetButton("Attack");
+        bool attack = Input.GetButtonDown("Attack");
 
         Vector3 move = Vector3.zero;
         if (Cam != null)

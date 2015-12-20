@@ -1,6 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+enum AttackState
+{
+    Idle,
+    Atk1,
+    Atk2,
+    Atk3,
+    Atk4,
+    Atk5,
+    Atk6
+}
+
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
@@ -15,8 +26,6 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField]
     float GroundCheckDistance = 0.2f;
     [SerializeField]
-    float MoveSpeedMultiplier = 1f;
-    [SerializeField]
     float AnimSpeedMultiplier = 1f;
     [SerializeField]
     float JumpPower = 12f;
@@ -24,6 +33,16 @@ public class PlayerCharacter : MonoBehaviour
     float Acceleration = 1f;
     [SerializeField]
     float MaxSpeed = 5f;
+    [SerializeField]
+    float MaxCrouchSpeed = 1.5f;
+    [SerializeField]
+    float GravityMultiplier = 2f;
+    [SerializeField]
+    Vector3 Friction;
+    [SerializeField]
+    float HP;
+    [SerializeField]
+    float MaxHP;
 
     Rigidbody RB;
     Animator MyAnimator;
@@ -37,7 +56,16 @@ public class PlayerCharacter : MonoBehaviour
     bool Crouching;
     Vector3 CapsuleCenter;
     float CapsuleHeight;
-    Vector3 Velocity;
+    public Vector3 Velocity;
+    private float RunSpeed;
+
+    [SerializeField]
+    float ComboTime;
+    public bool CanAttack;
+    bool ComboActive;
+    AttackState CurrentAttackState;
+    float ComboTimer;
+    int ComboCount;
 
     void Start()
     {
@@ -48,69 +76,202 @@ public class PlayerCharacter : MonoBehaviour
         CapsuleCenter = Capsule.center;
         OriginalGroundCheckDistance = GroundCheckDistance;
         RB.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+        MyAnimator.applyRootMotion = false;
+        CanAttack = true;
+        HP = 100f;
     }
 
     public void Move(Vector3 move, bool crouch, bool jump, bool attack)
     {
-        Debug.Log(move);
-
-        //Velocity = RB.velocity;
-        //Velocity += move * Acceleration * Time.fixedDeltaTime;
-        //float originalY = Velocity.y;
-        //Velocity.y = 0;
-        //Velocity = Vector3.ClampMagnitude(Velocity, MaxSpeed);
-        //Velocity.y = originalY;
-
+        Attack(attack);
         CheckGrounded();
-        
-        move = transform.InverseTransformDirection(move);
+        if (CurrentAttackState == AttackState.Atk3 || CurrentAttackState == AttackState.Atk6)
+        {
+            move = Vector3.zero;
+        }
         move = Vector3.ProjectOnPlane(move, GroundNormal);
-        TurnAmount = Mathf.Atan2(move.x, move.z);
-
-
-        // Root Motion Method
-        ForwardAmount = move.z;
-
-        ApplyExtraTurnRotation();
-
+        ApplyTurnRotation();
         if (Grounded)
         {
+            Velocity = RB.velocity;
+            Velocity += move * Acceleration * Time.fixedDeltaTime;
+            float originalY = Velocity.y;
+            Velocity.y = 0;
+            Velocity = Vector3.ClampMagnitude(Velocity, crouch ? MaxCrouchSpeed : MaxSpeed);
+            Velocity.y = originalY;
+            RB.velocity = Velocity;
             Jump(crouch, jump);
         }
         else
         {
             AirborneMovement();
         }
+        ScaleCapsule(crouch);
 
-        ScaleCapsuleForCrouch(crouch);
+        Vector3 localMove = transform.InverseTransformDirection(move);
+        TurnAmount = Mathf.Atan2(localMove.x, localMove.z);
+        ForwardAmount = localMove.z;
 
-        UpdateAnimator(move);
-    }
-
-    void FixedUpdate()
-    {
-        //RB.MovePosition(Velocity);
+        // Directional Friction
+        if (Grounded)
+        {
+            float forwardVelocity = Vector3.Dot(RB.velocity, transform.forward);
+            RunSpeed = forwardVelocity;
+            float rightVelocity = Vector3.Dot(RB.velocity, transform.right);
+            float upVelocity = Vector3.Dot(RB.velocity, transform.up);
+            Vector3 friction =
+                    forwardVelocity * Friction.z * transform.forward +
+                    rightVelocity * Friction.x * transform.right +
+                    upVelocity * Friction.z * transform.up;
+            // Extra friction when you let go of the controller
+            if (forwardVelocity < 3f && localMove.z < 0.25f)
+            {
+                friction *= 3f;
+            }
+            // Extra friction when you are attacking
+            if (attack)
+            {
+                friction *= 10f;
+            }
+            RB.AddForce(-friction, ForceMode.Acceleration);
+        }
+        UpdateAnimator(localMove);
     }
 
     void Jump(bool crouch, bool jump)
     {
         if (jump && !crouch && MyAnimator.GetCurrentAnimatorStateInfo(0).IsName("Grounded"))
         {
-            RB.velocity = new Vector3(RB.velocity.x, JumpPower, RB.velocity.z);
+            Vector3 jumpForce = Vector3.up * JumpPower * Time.fixedDeltaTime;
+            RB.AddForce(jumpForce, ForceMode.VelocityChange);
             Grounded = false;
-            MyAnimator.applyRootMotion = false;
             GroundCheckDistance = 0.1f;
         }
     }
 
-    void AirborneMovement()
+    void Attack(bool attack)
     {
-        GroundCheckDistance = RB.velocity.y < 0f ? OriginalGroundCheckDistance : 0.1f;
+        if (!CanAttack)
+        {
+            return;
+        }
+        else if (!attack && !ComboActive)
+        {
+            return;
+        }
+        else if (attack && !ComboActive)
+        {
+            ComboTimer = ComboTime;
+        }
+        if (Crouching)
+        {
+            MyAnimator.SetTrigger("AtkCrouchTrigger");
+            return;
+        }
+        if (!Grounded)
+        {
+            MyAnimator.SetTrigger("AtkJumpTrigger");
+            return;
+        }
+        ComboActive = true;
+        ComboTimer -= Time.fixedDeltaTime;
+        if (ComboTimer < 0f)
+        {
+            CurrentAttackState = AttackState.Idle;
+            ComboTimer = ComboTime;
+            ComboCount = 0;
+            ComboActive = false;
+        }
+        if (!attack)
+        {
+            return;
+        }
+        ComboCount++;
+        Debug.Log("ComboCount:" + ComboCount + " State:" + CurrentAttackState);
+        float q = Random.value;
+        switch (CurrentAttackState)
+        {
+            case AttackState.Idle:
+                if (q < 0.25f)
+                {
+                    MyAnimator.SetTrigger("Atk1Trigger");
+                    CurrentAttackState = AttackState.Atk1;
+                }
+                else if (q < 0.5f)
+                {
+                    MyAnimator.SetTrigger("Atk2Trigger");
+                    CurrentAttackState = AttackState.Atk2;
+                }
+                else if (q < 0.75f)
+                {
+                    MyAnimator.SetTrigger("Atk4Trigger");
+                    CurrentAttackState = AttackState.Atk4;
+                }
+                else
+                {
+                    MyAnimator.SetTrigger("Atk5Trigger");
+                    CurrentAttackState = AttackState.Atk5;
+                }
+                break;
+            case AttackState.Atk1:
+            case AttackState.Atk4:
+                if (ComboCount == 3)
+                {
+                    MyAnimator.SetTrigger("Atk6Trigger");
+                    CurrentAttackState = AttackState.Atk6;
+                }
+                else
+                {
+                    if (q < 0.5f)
+                    {
+                        MyAnimator.SetTrigger("Atk2Trigger");
+                        CurrentAttackState = AttackState.Atk2;
+                    }
+                    else
+                    {
+                        MyAnimator.SetTrigger("Atk5Trigger");
+                        CurrentAttackState = AttackState.Atk5;
+                    }
+                }
+                break;
+            case AttackState.Atk2:
+            case AttackState.Atk5:
+                if (ComboCount == 3)
+                {
+                    MyAnimator.SetTrigger("Atk3Trigger");
+                    CurrentAttackState = AttackState.Atk6;
+                }
+                else
+                {
+                    if (q < 0.5f)
+                    {
+                        MyAnimator.SetTrigger("Atk1Trigger");
+                        CurrentAttackState = AttackState.Atk1;
+                    }
+                    else
+                    {
+                        MyAnimator.SetTrigger("Atk4Trigger");
+                        CurrentAttackState = AttackState.Atk4;
+                    }
+                }
+                break;
+            case AttackState.Atk3:
+            case AttackState.Atk6:
+                ComboCount = 0;
+                break;
+        }
+
     }
 
-    void ApplyExtraTurnRotation()
+    void AirborneMovement()
     {
-        // help the character turn faster (this is in addition to root rotation in the animation)
+        GroundCheckDistance = RB.velocity.y < 0f ? OriginalGroundCheckDistance : 0.5f;
+        Vector3 extraGravityForce = (Physics.gravity * GravityMultiplier) - Physics.gravity;
+        RB.AddForce(extraGravityForce);
+    }
+
+    void ApplyTurnRotation()
+    {
         float turnSpeed = 0f;
         if (Crouching)
         {
@@ -125,12 +286,20 @@ public class PlayerCharacter : MonoBehaviour
 
     void UpdateAnimator(Vector3 move)
     {
-        //Debug.Log("Forward:" + ForwardAmount + " TurnAmount:" + TurnAmount);
-        //Debug.Log(RB.velocity.magnitude);
-        MyAnimator.SetFloat("Forward", ForwardAmount, 0.1f, Time.deltaTime);
-        MyAnimator.SetFloat("Turn", TurnAmount, 0.1f, Time.deltaTime);
+        MyAnimator.SetFloat("Forward", ForwardAmount, 0.5f, Time.fixedDeltaTime);
+        MyAnimator.SetFloat("Turn", TurnAmount, 0.1f, Time.fixedDeltaTime);
         MyAnimator.SetBool("Crouch", Crouching);
         MyAnimator.SetBool("OnGround", Grounded);
+        if (move.sqrMagnitude > 0.1f)
+        {
+            // When moving
+            MyAnimator.SetFloat("RunSpeed", RunSpeed * 0.25f, 0.2f, Time.fixedDeltaTime);
+        }
+        else
+        {
+            // When Idle
+            MyAnimator.SetFloat("RunSpeed", 1f, 0.2f, Time.fixedDeltaTime);
+        }
         if (!Grounded)
         {
             MyAnimator.SetFloat("Jump", RB.velocity.y);
@@ -142,58 +311,48 @@ public class PlayerCharacter : MonoBehaviour
         }
     }
 
-    public void OnAnimatorMove()
-    {
-        if (Grounded && Time.deltaTime > 0f)
-        {
-            Vector3 v = (MyAnimator.deltaPosition * MoveSpeedMultiplier) / Time.deltaTime;
-            v.y = RB.velocity.y;
-            RB.velocity = v;
-        }
-    }
-
     void CheckGrounded()
     {
         RaycastHit hit;
-        Vector3 point = transform.position + Vector3.up * 0.1f;
+        Vector3 point = transform.position + Vector3.up * 0.5f;
         Vector3 dir = Vector3.down;
 #if UNITY_EDITOR
-        Debug.DrawRay(point, dir, Color.red);
+        Debug.DrawLine(point, point + dir * GroundCheckDistance, Color.red);
 #endif
         if (Physics.Raycast(point, dir, out hit, GroundCheckDistance))
         {
             Grounded = true;
             GroundNormal = hit.normal;
-            MyAnimator.applyRootMotion = true;
         }
         else
         {
             Grounded = false;
             GroundNormal = Vector3.up;
-            MyAnimator.applyRootMotion = false;
         }
     }
 
-    void ScaleCapsuleForCrouch(bool crouch)
+    void ScaleCapsule(bool crouch)
     {
-        if (Grounded && crouch)
+        if (!Grounded)
+        {
+            Capsule.height = CapsuleHeight * 0.65f;
+            Capsule.center = CapsuleCenter * 1.2f;
+        }
+        else if (Grounded && crouch)
         {
             if (Crouching)
             {
                 return;
             }
-            Capsule.height = Capsule.height / 2f;
-            Capsule.center = Capsule.center / 2f;
+            Capsule.height = Capsule.height * 0.5f;
+            Capsule.center = Capsule.center * 0.5f;
             Crouching = true;
         }
         else
         {
             // Prevent standing in low headroom
-            Ray crouchRay = new Ray(RB.position + Vector3.up * Capsule.radius * 0.5f, Vector3.up);
+            Ray crouchRay = new Ray(RB.position + Vector3.up * Capsule.height * 0.5f, Vector3.up);
             float rayLength = CapsuleHeight - Capsule.radius * 0.5f;
-
-            //TODO - need to verify this actually works
-
             if (Physics.SphereCast(crouchRay, Capsule.radius * 0.5f, rayLength, ~0, QueryTriggerInteraction.Ignore))
             {
                 Crouching = true;
@@ -203,5 +362,20 @@ public class PlayerCharacter : MonoBehaviour
             Capsule.center = CapsuleCenter;
             Crouching = false;
         }
+    }
+
+    public void Hurt(float amount)
+    {
+        HP -= amount;
+    }
+
+    public void Heal(float amount)
+    {
+        HP = Mathf.Clamp(HP + amount, 0, MaxHP);
+    }
+
+    public float GetNormalizedHealth()
+    {
+        return Mathf.Clamp01(HP / MaxHP);
     }
 }

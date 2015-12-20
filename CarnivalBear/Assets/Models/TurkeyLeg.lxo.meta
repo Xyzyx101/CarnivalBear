@@ -1,0 +1,126 @@
+fileFormatVersion: 2
+guid: 86dc17c4459023a44832faa797702db3
+timeCreated: 1450570598
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: _mixed___Texture_
+    100002: Bone_Simple.lxp
+    100004: Camera
+    100006: Cellular__2___Texture_
+    100008: Cellular__Texture_
+    100010: Directional_Light
+    100012: Easy_Gradient__2___Texture_
+    100014: Easy_Gradient__Texture_
+    100016: Gradient__2___Texture_
+    100018: Gradient__3___Texture_
+    100020: Gradient__Texture_
+    100022: Lump__Texture_
+    100024: Render
+    100026: Rounded__Texture_
+    100028: Texture_Group
+    100030: //RootNode
+    100032: TurkeyLeg
+    100034: TurkeyLeg_High
+    100036: TurkeyLeg_normal__Image___Texture_
+    100038: Collider
+    100040: TurkeyLegCollider
+    400000: _mixed___Texture_
+    400002: Bone_Simple.lxp
+    400004: Camera
+    400006: Cellular__2___Texture_
+    400008: Cellular__Texture_
+    400010: Directional_Light
+    400012: Easy_Gradient__2___Texture_
+    400014: Easy_Gradient__Texture_
+    400016: Gradient__2___Texture_
+    400018: Gradient__3___Texture_
+    400020: Gradient__Texture_
+    400022: Lump__Texture_
+    400024: Render
+    400026: Rounded__Texture_
+    400028: Texture_Group
+    400030: //RootNode
+    400032: TurkeyLeg
+    400034: TurkeyLeg_High
+    400036: TurkeyLeg_normal__Image___Texture_
+    400038: Collider
+    400040: TurkeyLegCollider
+    2300000: TurkeyLeg
+    2300002: TurkeyLeg_High
+    2300004: Collider
+    2300006: TurkeyLegCollider
+    3300000: TurkeyLeg
+    3300002: TurkeyLeg_High
+    3300004: Collider
+    3300006: TurkeyLegCollider
+    4300000: TurkeyLeg
+    4300002: TurkeyLeg_High
+    4300004: Collider
+    4300006: TurkeyLegCollider
+    9500000: //RootNode
+  materials:
+    importMaterials: 0
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 1
+    tangentImportMode: 3
+  importAnimation: 0
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
