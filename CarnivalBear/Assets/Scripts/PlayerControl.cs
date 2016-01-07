@@ -36,6 +36,8 @@ public class PlayerControl : MonoBehaviour
         {
             Jump = Input.GetButtonDown("Jump");
         }
+        bool attack = Input.GetButtonDown("Attack");
+        Character.Attack(attack);
     }
 
     private void FixedUpdate()
@@ -44,8 +46,7 @@ public class PlayerControl : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
         bool crouch = Input.GetButton("Crouch");
-        bool attack = Input.GetButtonDown("Attack");
-
+        
         Vector3 move = Vector3.zero;
         if (Cam != null)
         {
@@ -55,7 +56,7 @@ public class PlayerControl : MonoBehaviour
             //move = Vector3.ClampMagnitude(move, 1.0f);
         }
 
-        Character.Move(move, crouch, Jump, attack);
+        Character.Move(move, crouch, Jump);
         Jump = false;
     }
 }

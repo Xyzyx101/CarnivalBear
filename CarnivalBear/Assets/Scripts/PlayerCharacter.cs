@@ -109,9 +109,8 @@ public class PlayerCharacter : MonoBehaviour
     //    MyAnimator.SetIKHintPositionWeight(AvatarIKHint.LeftKnee, 1f);
     //}
 
-    public void Move(Vector3 move, bool crouch, bool jump, bool attack)
+    public void Move(Vector3 move, bool crouch, bool jump)
     {
-        Attack(attack);
         CheckGrounded();
         int animState = MyAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
         if (animState == AnimHash.Atk3State || animState == AnimHash.Atk6State)
@@ -157,11 +156,12 @@ public class PlayerCharacter : MonoBehaviour
             {
                 friction *= 3f;
             }
+            
             // Extra friction when you are attacking
-            if (attack)
-            {
-                friction *= 10f;
-            }
+            //if (attack)
+            //{
+            //    friction *= 10f;
+            //}
             RB.AddForce(-friction, ForceMode.Acceleration);
         }
         UpdateAnimator(localMove);
@@ -178,7 +178,7 @@ public class PlayerCharacter : MonoBehaviour
         }
     }
 
-    void Attack(bool attack)
+    public void Attack(bool attack)
     {
         // Find current state
         AnimatorStateInfo baseState = MyAnimator.GetCurrentAnimatorStateInfo(0);
@@ -226,7 +226,7 @@ public class PlayerCharacter : MonoBehaviour
         {
             return;
         }
-        else if (AnimHash.IsAnyAtkState(animState) && animNormalizedTime < 0.65f) // Button slaming breaks the combo
+        else if (AnimHash.IsAnyAtkState(animState) && animNormalizedTime < 0.25f) // Button slaming breaks the combo
         {
             ComboActive = false;
             ComboCount = 0;
@@ -237,6 +237,7 @@ public class PlayerCharacter : MonoBehaviour
             ComboTimer = ComboTime;
             ComboCount++;
         }
+        Debug.Log("ComboCount" + ComboCount + " animNormalizedTime:" + animNormalizedTime);
 
         // Do attack
         float q = Random.value;
@@ -245,7 +246,7 @@ public class PlayerCharacter : MonoBehaviour
             RightChainsawTrigger.SetActive(true);
             MyAnimator.SetTrigger(AnimHash.AtkCrouchTrigger);
         }
-        else if (!Grounded /*animState == AnimHash.AirborneState*/) // No idea why checking Airborne state fails.  Hashes are fine but it just doesn't work.
+        else if (!Grounded /*animState == AnimHash.AirborneState*/ ) // No idea why checking Airborne state fails.  Hashes are fine but it just doesn't work.
         {
             RightChainsawTrigger.SetActive(true);
             LeftChainsawTrigger.SetActive(true);
@@ -391,7 +392,6 @@ public class PlayerCharacter : MonoBehaviour
         //        ComboCount = 0;
         //        break;
         //}
-
     }
 
     void AirborneMovement()
