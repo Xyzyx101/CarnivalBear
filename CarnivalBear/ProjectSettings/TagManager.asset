@@ -15,11 +15,11 @@ TagManager:
   - 
   - Player
   - HealthPickup
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Ground
+  - Enemy
+  - EnemyTrigger
+  - EnemyProjectile
+  - SpawnTrigger
   - 
   - 
   - 

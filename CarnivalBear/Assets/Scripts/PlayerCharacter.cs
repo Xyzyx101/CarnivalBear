@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 enum AttackState
 {
@@ -49,6 +50,8 @@ public class PlayerCharacter : MonoBehaviour
     float JumpDamage;
     [SerializeField]
     float ComboDamageMultiplier;
+    [SerializeField]
+    Transform TargetPoint;
 
     Rigidbody RB;
     Animator MyAnimator;
@@ -73,12 +76,29 @@ public class PlayerCharacter : MonoBehaviour
     float ComboTimer;
     int ComboCount;
 
+    [SerializeField]
+    float MaxStunAmount;
+    public float StunAmount;
+    [SerializeField]
+    private float StunBreakAmount = 25f;
+    [SerializeField]
+    private float StunBreakRadius = 4f;
+    [SerializeField]
+    private float StunBreakForce = 100f;
+    [SerializeField]
+    private float StunBreakDamage = 100f;
+
     //public Transform KneeRightIKHint;
     //public Transform KneeLeftIKHint;
     [SerializeField]
     GameObject RightChainsawTrigger;
     [SerializeField]
     GameObject LeftChainsawTrigger;
+
+    bool Dying;
+    [SerializeField]
+    float DieTime = 5f;
+    float DieTimer;
 
     void Start()
     {
@@ -100,69 +120,92 @@ public class PlayerCharacter : MonoBehaviour
         LeftChainsawTrigger.SetActive(false);
     }
 
-    // TODO fix IK
-    //void Update()
-    //{
-    //    MyAnimator.SetIKHintPosition(AvatarIKHint.RightKnee, KneeRightIKHint.position);
-    //    MyAnimator.SetIKHintPosition(AvatarIKHint.LeftKnee, KneeLeftIKHint.position);
-    //    MyAnimator.SetIKHintPositionWeight(AvatarIKHint.RightKnee, 1f);
-    //    MyAnimator.SetIKHintPositionWeight(AvatarIKHint.LeftKnee, 1f);
-    //}
+
+    void Update()
+    {
+        if (Dying)
+        {
+            Debug.Log(DieTimer);
+            DieTimer -= Time.deltaTime;
+            if (DieTimer < 0f)
+            {
+                Application.LoadLevel(Application.loadedLevel);
+
+            }
+        }
+        // TODO fix IK
+        //    MyAnimator.SetIKHintPosition(AvatarIKHint.RightKnee, KneeRightIKHint.position);
+        //    MyAnimator.SetIKHintPosition(AvatarIKHint.LeftKnee, KneeLeftIKHint.position);
+        //    MyAnimator.SetIKHintPositionWeight(AvatarIKHint.RightKnee, 1f);
+        //    MyAnimator.SetIKHintPositionWeight(AvatarIKHint.LeftKnee, 1f);
+    }
 
     public void Move(Vector3 move, bool crouch, bool jump)
     {
-        CheckGrounded();
-        int animState = MyAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
-        if (animState == AnimHash.Atk3State || animState == AnimHash.Atk6State)
+        if(Dying)
         {
-            move = Vector3.zero;
+            UpdateAnimator(Vector3.zero);
+            return;
         }
-        move = Vector3.ProjectOnPlane(move, GroundNormal);
-        ApplyTurnRotation();
-        if (Grounded)
-        {
-            Velocity = RB.velocity;
-            Velocity += move * Acceleration * Time.fixedDeltaTime;
-            float originalY = Velocity.y;
-            Velocity.y = 0;
-            Velocity = Vector3.ClampMagnitude(Velocity, crouch ? MaxCrouchSpeed : MaxSpeed);
-            Velocity.y = originalY;
-            RB.velocity = Velocity;
-            Jump(crouch, jump);
-        }
-        else
-        {
-            AirborneMovement();
-        }
-        ScaleCapsule(crouch);
-
         Vector3 localMove = transform.InverseTransformDirection(move);
         TurnAmount = Mathf.Atan2(localMove.x, localMove.z);
         ForwardAmount = localMove.z;
-
-        // Directional Friction
-        if (Grounded)
+        if (StunAmount != 0f)
         {
-            float forwardVelocity = Vector3.Dot(RB.velocity, transform.forward);
-            RunSpeed = forwardVelocity;
-            float rightVelocity = Vector3.Dot(RB.velocity, transform.right);
-            float upVelocity = Vector3.Dot(RB.velocity, transform.up);
-            Vector3 friction =
-                    forwardVelocity * Friction.z * transform.forward +
-                    rightVelocity * Friction.x * transform.right +
-                    upVelocity * Friction.z * transform.up;
-            // Extra friction when you let go of the controller
-            if (forwardVelocity < 3f && localMove.z < 0.25f)
+            Vector3 newVel = Vector3.Lerp(RB.velocity, Vector3.zero, 3.0f * Time.deltaTime);
+            RB.velocity = new Vector3(newVel.x, RB.velocity.y, newVel.z);
+        }
+        else
+        {
+            CheckGrounded();
+            int animState = MyAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+            if (animState == AnimHash.Atk3State || animState == AnimHash.Atk6State)
             {
-                friction *= 3f;
+                move = Vector3.zero;
             }
-            
-            // Extra friction when you are attacking
-            //if (attack)
-            //{
-            //    friction *= 10f;
-            //}
-            RB.AddForce(-friction, ForceMode.Acceleration);
+            move = Vector3.ProjectOnPlane(move, GroundNormal);
+            ApplyTurnRotation();
+            if (Grounded)
+            {
+                Velocity = RB.velocity;
+                Velocity += move * Acceleration * Time.fixedDeltaTime;
+                float originalY = Velocity.y;
+                Velocity.y = 0;
+                Velocity = Vector3.ClampMagnitude(Velocity, crouch ? MaxCrouchSpeed : MaxSpeed);
+                Velocity.y = originalY;
+                RB.velocity = Velocity;
+                Jump(crouch, jump);
+            }
+            else
+            {
+                AirborneMovement();
+            }
+            ScaleCapsule(crouch);
+
+            // Directional Friction
+            if (Grounded)
+            {
+                float forwardVelocity = Vector3.Dot(RB.velocity, transform.forward);
+                RunSpeed = forwardVelocity;
+                float rightVelocity = Vector3.Dot(RB.velocity, transform.right);
+                float upVelocity = Vector3.Dot(RB.velocity, transform.up);
+                Vector3 friction =
+                        forwardVelocity * Friction.z * transform.forward +
+                        rightVelocity * Friction.x * transform.right +
+                        upVelocity * Friction.z * transform.up;
+                // Extra friction when you let go of the controller
+                if (forwardVelocity < 3f && localMove.z < 0.25f)
+                {
+                    friction *= 3f;
+                }
+
+                // Extra friction when you are attacking
+                //if (attack)
+                //{
+                //    friction *= 10f;
+                //}
+                RB.AddForce(-friction, ForceMode.Acceleration);
+            }
         }
         UpdateAnimator(localMove);
     }
@@ -180,6 +223,12 @@ public class PlayerCharacter : MonoBehaviour
 
     public void Attack(bool attack)
     {
+        if (attack && StunAmount != 0f)
+        {
+            BreakStun();
+            return;
+        }
+
         // Find current state
         AnimatorStateInfo baseState = MyAnimator.GetCurrentAnimatorStateInfo(0);
         AnimatorStateInfo atkState = MyAnimator.GetCurrentAnimatorStateInfo(1);
@@ -237,7 +286,7 @@ public class PlayerCharacter : MonoBehaviour
             ComboTimer = ComboTime;
             ComboCount++;
         }
-        Debug.Log("ComboCount" + ComboCount + " animNormalizedTime:" + animNormalizedTime);
+        //Debug.Log("ComboCount" + ComboCount + " animNormalizedTime:" + animNormalizedTime);
 
         // Do attack
         float q = Random.value;
@@ -417,6 +466,13 @@ public class PlayerCharacter : MonoBehaviour
 
     void UpdateAnimator(Vector3 move)
     {
+        if (Dying)
+        {
+            MyAnimator.SetFloat(AnimHash.StunFloat, 0f, 0f, Time.fixedDeltaTime);
+            MyAnimator.SetTrigger(AnimHash.DieTrigger);
+            return;
+        }
+        MyAnimator.SetFloat(AnimHash.StunFloat, GetNormalizedStun(), 0.25f, Time.fixedDeltaTime);
         MyAnimator.SetFloat(AnimHash.ForwardFloat, ForwardAmount, 0.5f, Time.fixedDeltaTime);
         MyAnimator.SetFloat(AnimHash.TurnFloat, TurnAmount, 0.1f, Time.fixedDeltaTime);
         MyAnimator.SetBool(AnimHash.CrouchBool, Crouching);
@@ -497,12 +553,31 @@ public class PlayerCharacter : MonoBehaviour
 
     public void Hurt(float amount)
     {
+        if(Dying)
+        {
+            return;
+        }
         HP -= amount;
+        if (HP <= 0f)
+        {
+            Dying = true;
+            DieTimer = DieTime;
+        }
     }
 
     public void Heal(float amount)
     {
         HP = Mathf.Clamp(HP + amount, 0, MaxHP);
+    }
+
+    public void Shock(float dmgAmount, float shockAmount)
+    {
+        Hurt(dmgAmount);
+        if (StunAmount == 0f)
+        {
+            StunAmount = MaxStunAmount;
+        }
+        StunAmount = Mathf.Clamp(StunAmount += shockAmount, 0f, MaxStunAmount);
     }
 
     public float GetNormalizedHealth()
@@ -519,6 +594,43 @@ public class PlayerCharacter : MonoBehaviour
         else
         {
             return Damage * ComboCount * ComboDamageMultiplier;
+        }
+    }
+
+    public float GetNormalizedStun()
+    {
+        return Mathf.Clamp01(StunAmount / MaxStunAmount);
+    }
+
+    public Vector3 GetTargetPoint()
+    {
+        return TargetPoint.position;
+    }
+
+    void BreakStun()
+    {
+        StunAmount = Mathf.Clamp(StunAmount - StunBreakAmount - 100f, 0f, MaxStunAmount);
+        if (StunAmount == 0f)
+        {
+            LayerMask enemyMask = LayerMask.GetMask("Enemy");
+            var colliders = Physics.OverlapSphere(transform.position, StunBreakRadius, enemyMask);
+            var rigidbodies = new List<Rigidbody>();
+            foreach (var col in colliders)
+            {
+                if (col.attachedRigidbody != null && !rigidbodies.Contains(col.attachedRigidbody))
+                {
+                    rigidbodies.Add(col.attachedRigidbody);
+                }
+            }
+            foreach (var rb in rigidbodies)
+            {
+                rb.AddExplosionForce(StunBreakForce, transform.position, StunBreakRadius, 5f, ForceMode.Impulse);
+                Enemy enemy = rb.gameObject.GetComponent<Enemy>();
+                if (enemy)
+                {
+                    enemy.Hurt(StunBreakDamage);
+                }
+            }
         }
     }
 }

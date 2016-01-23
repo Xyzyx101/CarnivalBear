@@ -1,0 +1,114 @@
+fileFormatVersion: 2
+guid: 9665bec2b678dc143b70706e84396a81
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: Camera
+    100002: gondel
+    100004: gurte
+    100006: plattform
+    100008: rotationsarm_achse
+    100010: rotationsarme
+    100012: staender
+    100014: 'staender '
+    100016: //RootNode
+    100018: wasser
+    400000: Camera
+    400002: gondel
+    400004: gurte
+    400006: plattform
+    400008: rotationsarm_achse
+    400010: rotationsarme
+    400012: staender
+    400014: 'staender '
+    400016: //RootNode
+    400018: wasser
+    2300000: gondel
+    2300002: gurte
+    2300004: plattform
+    2300006: rotationsarm_achse
+    2300008: rotationsarme
+    2300010: staender
+    2300012: 'staender '
+    2300014: wasser
+    3300000: gondel
+    3300002: gurte
+    3300004: plattform
+    3300006: rotationsarm_achse
+    3300008: rotationsarme
+    3300010: staender
+    3300012: 'staender '
+    3300014: wasser
+    4300000: staender
+    4300002: gurte
+    4300004: rotationsarme
+    4300006: plattform
+    4300008: wasser
+    4300010: 'staender '
+    4300012: rotationsarm_achse
+    4300014: gondel
+    11100000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 2
+    materialSearch: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 0.01
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 0
+  tangentSpace:
+    normalSmoothAngle: 40
+    normalImportMode: 1
+    tangentImportMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 1
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

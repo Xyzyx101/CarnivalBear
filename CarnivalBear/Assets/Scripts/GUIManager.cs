@@ -8,19 +8,27 @@ public class GUIManager : MonoBehaviour
     public Text ScoreText;
     public Text TimeText;
     public Image HealthBar;
-
+    public Image StunBar;
+    public float StunBarPulseSpeed;
+    public Color StunColor1;
+    public Color StunColor2;
     private float LevelTime;
     private float Score;
-
-    // Update is called once per frame
+    
     void Update()
     {
         LevelTime += Time.deltaTime;
         TimeText.text = TimeToString(LevelTime);
         ScoreText.text = Score.ToString();
+
         float normalizedHealth = Player.GetNormalizedHealth();
         HealthBar.rectTransform.localScale = new Vector3(normalizedHealth, 1f);
         HealthBar.color = Color.Lerp(Color.red, Color.green, normalizedHealth);
+
+        float normalizedStun = Player.GetNormalizedStun();
+        StunBar.enabled = !(normalizedStun == 0f);
+        StunBar.rectTransform.localScale = new Vector3(normalizedStun, 1f);
+        StunBar.color = Color.Lerp(StunColor1, StunColor2, Mathf.Sin(StunBarPulseSpeed * Time.timeSinceLevelLoad));
     }
 
     public void AddScore(float amount)

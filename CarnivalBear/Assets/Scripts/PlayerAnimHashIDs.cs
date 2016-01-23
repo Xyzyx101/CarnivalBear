@@ -15,6 +15,9 @@ public class PlayerAnimHashIDs : MonoBehaviour
     public int GroundedState;
     public int AirborneState;
     public int CrouchState;
+    public int StunnedState;
+    public int StunBreak;
+    public int DieState;
 
     public int ForwardFloat;
     public int TurnFloat;
@@ -22,6 +25,7 @@ public class PlayerAnimHashIDs : MonoBehaviour
     public int OnGroundBool;
     public int JumpFloat;
     public int RunSpeedFloat;
+    public int StunFloat;
     public int Atk1Trigger;
     public int Atk2Trigger;
     public int Atk3Trigger;
@@ -30,6 +34,7 @@ public class PlayerAnimHashIDs : MonoBehaviour
     public int Atk6Trigger;
     public int AtkCrouchTrigger;
     public int AtkJumpTrigger;
+    public int DieTrigger;
 
     void Awake()
     {
@@ -46,6 +51,9 @@ public class PlayerAnimHashIDs : MonoBehaviour
         CrouchState = Animator.StringToHash("Base Layer.Crouch");
         AirborneState = Animator.StringToHash("Base Layer.Airborne");
         GroundedState = Animator.StringToHash("Base Layer.Grounded");
+        StunnedState = Animator.StringToHash("Base Layer.Stunned");
+        StunBreak = Animator.StringToHash("Base Layer.StunBreak");
+        DieState = Animator.StringToHash("Base Layer.Die");
 
         // Parameters
         ForwardFloat = Animator.StringToHash("Forward");
@@ -54,6 +62,7 @@ public class PlayerAnimHashIDs : MonoBehaviour
         OnGroundBool = Animator.StringToHash("OnGround");
         JumpFloat = Animator.StringToHash("Jump");
         RunSpeedFloat = Animator.StringToHash("RunSpeed");
+        StunFloat = Animator.StringToHash("Stunned");
         Atk1Trigger = Animator.StringToHash("Atk1Trigger");
         Atk2Trigger = Animator.StringToHash("Atk2Trigger");
         Atk3Trigger = Animator.StringToHash("Atk3Trigger");
@@ -62,6 +71,7 @@ public class PlayerAnimHashIDs : MonoBehaviour
         Atk6Trigger = Animator.StringToHash("Atk6Trigger");
         AtkCrouchTrigger = Animator.StringToHash("AtkCrouchTrigger");
         AtkJumpTrigger = Animator.StringToHash("AtkJumpTrigger");
+        DieTrigger = Animator.StringToHash("DieTrigger");
     }
 
     public bool IsAnyAtkState(int stateHash)

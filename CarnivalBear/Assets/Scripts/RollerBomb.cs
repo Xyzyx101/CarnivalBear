@@ -60,7 +60,7 @@ public class RollerBomb : MonoBehaviour
                 break;
             case Mode.Explode:
                 Instantiate(ExplosionPrefab, transform.position, transform.rotation);
-                Destroy(gameObject, 0.25f);
+                Destroy(gameObject, 0.15f);
                 CurrentMode = Mode.Dead;
                 break;
             case Mode.Dead:
@@ -79,6 +79,11 @@ public class RollerBomb : MonoBehaviour
             Quaternion lookRotation = Quaternion.LookRotation(direction);
             RB.MoveRotation(Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 0.5f));
             RB.MovePosition(transform.position + transform.forward * Time.fixedDeltaTime * 8.0f);
+        }
+        else
+        {
+            RB.velocity = Vector3.zero;
+            RB.angularVelocity = Vector3.zero;
         }
     }
 

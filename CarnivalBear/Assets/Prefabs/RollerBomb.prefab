@@ -188,7 +188,7 @@ MonoBehaviour:
   RotateSpeed: 10000
   Wheel: {fileID: 474922}
   AttackTime: 1.25
-  ExplosionPrefab: {fileID: 180810, guid: bd8ba09e23764544f93cac91aa2713b5, type: 2}
+  ExplosionPrefab: {fileID: 190248, guid: 8e98eb2a2429f5b498704631571a763b, type: 2}
 --- !u!135 &13571638
 SphereCollider:
   m_ObjectHideFlags: 1
@@ -222,7 +222,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 108164}
   m_Enabled: 1
   m_Radius: 0.5
-  m_Speed: 3.5
+  m_Speed: 5
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
@@ -256,6 +256,10 @@ Prefab:
     - target: {fileID: 0}
       propertyPath: m_CollisionDetection
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: m_Speed
+      value: 5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 0}
